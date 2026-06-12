@@ -631,9 +631,9 @@ function renderTable() {
       '<td style="font-family:Share Tech Mono,monospace;font-size:12px;color:var(--muted);">'+fmtDate(e.ultimaManut)+'</td>' +
       '<td style="font-size:12px;">'+(activeRental ? '<span style="color:var(--info);font-weight:500;">'+activeRental.cliente+'</span>' : '<span style="color:var(--muted2)">—</span>')+'</td>' +
       '<td><div class="actions-col">' +
-        '<button class="btn btn-ghost btn-sm" onclick="openDetail(''+e.id+'')">Ver</button>' +
-        '<button class="btn btn-ghost btn-sm" onclick="openModal('edit',''+e.id+'')">Editar</button>' +
-        '<button class="btn btn-danger btn-sm" onclick="deleteEquip(''+e.id+'')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg></button>' +
+        '<button class="btn btn-ghost btn-sm" onclick="openDetail('+e.id+')">Ver</button>' +
+        '<button class="btn btn-ghost btn-sm" onclick="openModal(&apos;edit&apos;,'+e.id+')">Editar</button>' +
+        '<button class="btn btn-danger btn-sm" onclick="deleteEquip('+e.id+')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg></button>' +
       '</div></td></tr>';
   }).join('');
 }
@@ -779,7 +779,7 @@ function renderRentals() {
       '<td class="mono" style="font-size:12px;color:var(--muted)">'+fmtDate(g.fim)+'</td>' +
       '<td class="mono" style="font-size:12px;">'+(allDone ? '<span style="color:var(--success)">'+fmtDate(g.records[g.records.length-1].devolucao)+'</span>' : '<span style="color:var(--muted2)">—</span>')+'</td>' +
       '<td>'+(allDone ? '<span class="badge badge-disponivel">Devolvido</span>' : '<span class="badge badge-alugado">Em andamento</span>')+'</td>' +
-      '<td>'+(!allDone ? '<button class="btn btn-ghost btn-sm" onclick="devolverGrupo(''+g.key+'')">Devolver tudo</button>' : '')+'</td></tr>';
+      '<td>'+(!allDone ? '<button class="btn btn-ghost btn-sm" onclick="devolverGrupo('+g.key+')">Devolver tudo</button>' : '')+'</td></tr>';
   }).join('');
 }
 
@@ -905,7 +905,7 @@ function renderCaixa() {
       '<td style="font-size:12px;color:var(--muted)">'+l.categoria+'</td>' +
       '<td style="font-weight:500">'+l.desc+(l.obs ? '<div style="font-size:11px;color:var(--muted2);margin-top:2px;">'+l.obs+'</div>' : '')+'</td>' +
       '<td class="mono" style="font-size:13px;font-weight:600;color:'+(ent?'var(--success)':'var(--danger)')+';">'+(ent?'+':'-')+' R$ '+parseFloat(l.valor).toLocaleString('pt-BR',{minimumFractionDigits:2})+'</td>' +
-      '<td><button class="btn btn-danger btn-sm" onclick="deleteCaixa(''+l.id+'')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg></button></td></tr>';
+      '<td><button class="btn btn-danger btn-sm" onclick="deleteCaixa('+l.id+')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg></button></td></tr>';
   }).join('');
 }
 
