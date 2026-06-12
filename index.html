@@ -627,8 +627,8 @@ function renderTable() {
     return '<tr><td><div class="equip-name">'+e.nome+'</div><div class="equip-code">'+(e.codigo||'')+'</div></td>' +
       '<td style="color:var(--muted);font-size:12px;">'+e.categoria+'</td>' +
       '<td>'+badgeHtml(e.estado)+'</td>' +
-      '<td style="font-family:'Share Tech Mono',monospace;font-size:12px;color:var(--muted);">'+fmtDate(e.dataCompra)+'</td>' +
-      '<td style="font-family:'Share Tech Mono',monospace;font-size:12px;color:var(--muted);">'+fmtDate(e.ultimaManut)+'</td>' +
+      '<td style="font-family:Share Tech Mono,monospace;font-size:12px;color:var(--muted);">'+fmtDate(e.dataCompra)+'</td>' +
+      '<td style="font-family:Share Tech Mono,monospace;font-size:12px;color:var(--muted);">'+fmtDate(e.ultimaManut)+'</td>' +
       '<td style="font-size:12px;">'+(activeRental ? '<span style="color:var(--info);font-weight:500;">'+activeRental.cliente+'</span>' : '<span style="color:var(--muted2)">—</span>')+'</td>' +
       '<td><div class="actions-col">' +
         '<button class="btn btn-ghost btn-sm" onclick="openDetail(''+e.id+'')">Ver</button>' +
