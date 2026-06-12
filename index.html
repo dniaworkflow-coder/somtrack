@@ -1,0 +1,1006 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DJC Backlines — Gestão de Equipamentos</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #050508;
+    --surface: #0d0d14;
+    --surface2: #13131f;
+    --border: #1e1e30;
+    --border2: #2a2a42;
+    --accent: #ff2dff;
+    --accent2: #00f0ff;
+    --text: #f0f0ff;
+    --muted: #7070a0;
+    --muted2: #3a3a5a;
+    --danger: #ff3355;
+    --warning: #ffaa00;
+    --success: #00f0b0;
+    --info: #00f0ff;
+    --radius: 8px;
+    --radius-sm: 4px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Orbitron', monospace; min-height: 100vh; }
+  code, .mono { font-family: 'Share Tech Mono', monospace; }
+  .app { display: flex; min-height: 100vh; }
+  .sidebar { width: 220px; background: var(--surface); border-right: 1px solid var(--border); padding: 24px 0; display: flex; flex-direction: column; flex-shrink: 0; }
+  .main { flex: 1; padding: 32px; overflow-x: hidden; }
+  .logo { padding: 0 20px 24px; border-bottom: 1px solid var(--border); margin-bottom: 16px; }
+  .nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 20px; font-size: 13px; color: var(--muted); cursor: pointer; transition: all 0.15s; border-left: 2px solid transparent; }
+  .nav-item:hover { color: var(--accent2); background: rgba(0,240,255,0.05); }
+  .nav-item.active { color: var(--accent); border-left-color: var(--accent); background: rgba(255,45,255,0.07); text-shadow: 0 0 8px rgba(255,45,255,0.5); }
+  .nav-item svg { width: 16px; height: 16px; flex-shrink: 0; }
+  .nav-section { font-size: 10px; font-weight: 500; color: var(--muted2); padding: 16px 20px 6px; letter-spacing: 1px; text-transform: uppercase; }
+  .page-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 28px; flex-wrap: wrap; gap: 12px; }
+  .page-title { font-size: 18px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; }
+  .page-sub { font-size: 13px; color: var(--muted); margin-top: 3px; }
+  .btn { display: inline-flex; align-items: center; gap: 7px; padding: 9px 16px; border-radius: var(--radius-sm); font-family: 'Orbitron', monospace; font-size: 11px; font-weight: 500; cursor: pointer; border: none; transition: all 0.15s; text-transform: uppercase; letter-spacing: 1px; }
+  .btn-primary { background: var(--accent); color: #050508; box-shadow: 0 0 16px rgba(255,45,255,0.4), 0 0 32px rgba(255,45,255,0.15); border: 1px solid rgba(255,45,255,0.6); }
+  .btn-primary:hover { background: var(--accent2); box-shadow: 0 0 20px rgba(0,240,255,0.5), 0 0 40px rgba(0,240,255,0.2); border-color: var(--accent2); color: #050508; }
+  .btn-ghost { background: transparent; color: var(--muted); border: 1px solid var(--border2); }
+  .btn-ghost:hover { color: var(--text); border-color: var(--muted); }
+  .btn-danger { background: rgba(255,82,82,0.12); color: var(--danger); border: 1px solid rgba(255,82,82,0.25); }
+  .btn-danger:hover { background: rgba(255,82,82,0.2); }
+  .btn-sm { padding: 5px 10px; font-size: 12px; }
+  .btn svg { width: 15px; height: 15px; }
+  .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px,1fr)); gap: 12px; margin-bottom: 28px; }
+  .stat-card { background: linear-gradient(135deg, #0d0d14 0%, #13131f 100%); border: 1px solid rgba(255,45,255,0.15); border-radius: var(--radius); padding: 16px; position: relative; overflow: hidden; }
+  .stat-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(255,45,255,0.6), transparent); }
+  .stat-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 8px; }
+  .stat-value { font-size: 28px; font-weight: 700; font-family: 'Share Tech Mono', monospace; }
+  .stat-value.accent { color: var(--accent); text-shadow: 0 0 12px rgba(255,45,255,0.5); }
+  .stat-value.warning { color: var(--warning); }
+  .stat-value.success { color: var(--success); text-shadow: 0 0 12px rgba(0,240,176,0.4); }
+  .stat-value.danger { color: var(--danger); }
+  .table-wrap { background: var(--surface); border: 1px solid rgba(255,45,255,0.2); border-radius: var(--radius); overflow: hidden; box-shadow: 0 0 30px rgba(255,45,255,0.05); }
+  .table-toolbar { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; border-bottom: 1px solid var(--border); flex-wrap: wrap; gap: 10px; }
+  .search-box { display: flex; align-items: center; gap: 8px; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 7px 12px; flex: 1; max-width: 280px; }
+  .search-box svg { width: 15px; height: 15px; color: var(--muted); flex-shrink: 0; }
+  .search-box input { background: none; border: none; outline: none; color: var(--text); font-family: 'Orbitron', monospace; font-size: 13px; width: 100%; }
+  .search-box input::placeholder { color: var(--muted2); }
+  .filter-row { display: flex; gap: 8px; flex-wrap: wrap; }
+  .filter-btn { padding: 4px 12px; border-radius: 20px; font-size: 12px; font-family: 'Orbitron', monospace; cursor: pointer; border: 1px solid var(--border2); background: transparent; color: var(--muted); transition: all 0.15s; }
+  .filter-btn.active, .filter-btn:hover { background: var(--surface2); color: var(--text); border-color: var(--muted); }
+  .filter-btn.f-disponivel.active { border-color: var(--success); color: var(--success); background: rgba(74,222,128,0.08); }
+  .filter-btn.f-alugado.active { border-color: var(--info); color: var(--info); background: rgba(96,165,250,0.08); }
+  .filter-btn.f-manutencao.active { border-color: var(--warning); color: var(--warning); background: rgba(255,184,48,0.08); }
+  table { width: 100%; border-collapse: collapse; }
+  th { font-size: 11px; font-weight: 500; color: var(--accent); text-transform: uppercase; letter-spacing: 1.5px; padding: 10px 16px; text-align: left; border-bottom: 1px solid rgba(255,45,255,0.2); background: rgba(255,45,255,0.06); text-shadow: 0 0 6px rgba(255,45,255,0.3); }
+  td { padding: 13px 16px; font-size: 13px; border-bottom: 1px solid rgba(255,45,255,0.06); vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(255,45,255,0.04); }
+  .equip-name { font-weight: 500; font-size: 14px; }
+  .equip-code { font-family: 'Share Tech Mono', monospace; font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .badge { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 500; }
+  .badge::before { content: ''; width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
+  .badge-disponivel { background: rgba(74,222,128,0.1); color: var(--success); border: 1px solid rgba(74,222,128,0.2); box-shadow: 0 0 8px rgba(0,240,176,0.2); }
+  .badge-disponivel::before { background: var(--success); }
+  .badge-alugado { background: rgba(96,165,250,0.1); color: var(--info); border: 1px solid rgba(96,165,250,0.2); box-shadow: 0 0 8px rgba(0,240,255,0.2); }
+  .badge-alugado::before { background: var(--info); }
+  .badge-manutencao { background: rgba(255,184,48,0.1); color: var(--warning); border: 1px solid rgba(255,184,48,0.2); box-shadow: 0 0 8px rgba(255,170,0,0.2); }
+  .badge-manutencao::before { background: var(--warning); }
+  .badge-inativo { background: rgba(136,136,136,0.1); color: var(--muted); border: 1px solid rgba(136,136,136,0.2); }
+  .badge-inativo::before { background: var(--muted); }
+  .modal-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 100; align-items: flex-start; justify-content: center; padding: 40px 16px; overflow-y: auto; }
+  .modal-backdrop.open { display: flex; }
+  .modal { background: linear-gradient(160deg, #0d0d14 0%, #09090f 100%); border: 1px solid rgba(255,45,255,0.3); border-radius: 14px; width: 100%; max-width: 600px; padding: 28px; box-shadow: 0 0 60px rgba(255,45,255,0.15), 0 0 120px rgba(255,45,255,0.05); }
+  .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid rgba(255,45,255,0.2); }
+  .modal-title { font-size: 17px; font-weight: 700; color: var(--accent); text-shadow: 0 0 10px rgba(255,45,255,0.4); letter-spacing: 1px; }
+  .close-btn { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm); width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--muted); }
+  .close-btn:hover { color: var(--text); }
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .form-group { display: flex; flex-direction: column; gap: 6px; }
+  .form-group.span2 { grid-column: span 2; }
+  label { font-size: 12px; color: var(--muted); font-weight: 500; letter-spacing: 0.3px; }
+  input, select, textarea { background: var(--surface2); border: 1px solid var(--border2); border-radius: var(--radius-sm); padding: 9px 12px; color: var(--text); font-family: 'Orbitron', monospace; font-size: 13px; outline: none; transition: border-color 0.15s; width: 100%; }
+  input:focus, select:focus, textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(255,45,255,0.15), 0 0 12px rgba(255,45,255,0.1); }
+  select option { background: var(--surface); }
+  textarea { resize: vertical; min-height: 80px; }
+  .form-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border); }
+  .detail-section { margin-bottom: 20px; }
+  .detail-section h3 { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+  .detail-row { display: flex; justify-content: space-between; align-items: center; padding: 7px 0; font-size: 13px; }
+  .detail-row .key { color: var(--muted); }
+  .detail-row .val { font-weight: 500; text-align: right; }
+  .history-item { background: var(--surface2); border-radius: var(--radius-sm); padding: 10px 14px; margin-bottom: 8px; font-size: 12px; }
+  .history-item .h-top { display: flex; justify-content: space-between; margin-bottom: 4px; }
+  .history-item .h-client { font-weight: 500; font-size: 13px; }
+  .history-item .h-date { color: var(--muted); font-family: 'Share Tech Mono', monospace; font-size: 11px; }
+  .manut-card { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+  .manut-info h4 { font-size: 14px; font-weight: 500; margin-bottom: 4px; }
+  .manut-info p { font-size: 12px; color: var(--muted); }
+  .manut-date { font-family: 'Share Tech Mono', monospace; font-size: 12px; color: var(--muted); text-align: right; white-space: nowrap; }
+  .alert-strip { background: rgba(255,170,0,0.06); border: 1px solid rgba(255,170,0,0.25); border-radius: var(--radius); padding: 12px 16px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--warning); box-shadow: 0 0 16px rgba(255,170,0,0.08); }
+  .alert-strip svg { width: 16px; height: 16px; flex-shrink: 0; }
+  .actions-col { display: flex; gap: 6px; }
+  .equip-check-item { display: flex; align-items: center; gap: 10px; padding: 7px 10px; border-radius: var(--radius-sm); cursor: pointer; transition: background 0.1s; }
+  .equip-check-item:hover { background: rgba(255,45,255,0.06); }
+  .equip-check-item input[type=checkbox] { width: 15px; height: 15px; accent-color: var(--accent); cursor: pointer; flex-shrink: 0; }
+  .equip-check-item .eci-name { font-size: 13px; font-weight: 500; }
+  .equip-check-item .eci-code { font-family: 'Share Tech Mono', monospace; font-size: 11px; color: var(--muted); margin-left: 4px; }
+  .empty-state { text-align: center; padding: 48px 16px; color: var(--muted); }
+  .empty-state svg { width: 40px; height: 40px; margin: 0 auto 12px; opacity: 0.3; }
+  .empty-state p { font-size: 14px; }
+  body::before { content: ''; position: fixed; inset: 0; background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,45,255,0.015) 2px, rgba(255,45,255,0.015) 4px); pointer-events: none; z-index: 9999; }
+  .sidebar { border-right: 1px solid rgba(255,45,255,0.3); box-shadow: 2px 0 20px rgba(255,45,255,0.08); background: linear-gradient(180deg, #0d0d14 0%, #090912 100%); }
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { background: var(--surface); }
+  ::-webkit-scrollbar-thumb { background: rgba(255,45,255,0.3); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(255,45,255,0.5); }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="logo">
+      <p style="font-size:14px;font-weight:700;text-align:center;letter-spacing:2px;color:var(--accent);text-shadow:0 0 10px rgba(255,45,255,0.5);">DJC BACKLINES</p>
+      <p style="font-size:10px;color:var(--muted);text-align:center;letter-spacing:2px;margin-top:4px;">GESTÃO DE EQUIPAMENTOS</p>
+    </div>
+    <div class="nav-section">Módulos</div>
+    <div class="nav-item active" onclick="showTab('equipamentos')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+      Equipamentos
+    </div>
+    <div class="nav-item" onclick="showTab('alugueis')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="6" width="18" height="16" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/></svg>
+      Aluguéis
+    </div>
+    <div class="nav-item" onclick="showTab('manutencoes')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+      Manutenções
+    </div>
+    <div class="nav-item" onclick="showTab('dashboard')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="2" y="3" width="9" height="9" rx="1"/><rect x="13" y="3" width="9" height="5" rx="1"/><rect x="13" y="12" width="9" height="9" rx="1"/><rect x="2" y="16" width="9" height="5" rx="1"/></svg>
+      Dashboard
+    </div>
+    <div class="nav-item" onclick="showTab('caixa')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/><circle cx="12" cy="15" r="1.5"/></svg>
+      Caixa
+    </div>
+  </aside>
+  <main class="main">
+    <div id="tab-equipamentos">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Equipamentos</div>
+          <div class="page-sub">Gerencie seu backline e frota de equipamentos</div>
+        </div>
+        <button class="btn btn-primary" onclick="openModal('add')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Novo equipamento
+        </button>
+      </div>
+      <div class="stats-grid" id="stats-grid"></div>
+      <div id="alert-manut"></div>
+      <div class="table-wrap">
+        <div class="table-toolbar">
+          <div class="search-box">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" id="search-input" placeholder="Buscar equipamento..." oninput="renderTable()">
+          </div>
+          <div class="filter-row">
+            <button class="filter-btn active" data-filter="todos" onclick="setFilter('todos')">Todos</button>
+            <button class="filter-btn f-disponivel" data-filter="disponivel" onclick="setFilter('disponivel')">Disponível</button>
+            <button class="filter-btn f-alugado" data-filter="alugado" onclick="setFilter('alugado')">Alugado</button>
+            <button class="filter-btn f-manutencao" data-filter="manutencao" onclick="setFilter('manutencao')">Manutenção</button>
+          </div>
+        </div>
+        <div style="overflow-x:auto;">
+          <table>
+            <thead>
+              <tr>
+                <th>Equipamento</th>
+                <th>Categoria</th>
+                <th>Estado</th>
+                <th>Compra</th>
+                <th>Últ. manutenção</th>
+                <th>Alugado a</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="equip-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div id="tab-alugueis" style="display:none;">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Aluguéis</div>
+          <div class="page-sub">Histórico e aluguéis em andamento</div>
+        </div>
+        <button class="btn btn-primary" onclick="openRentalModal()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Registrar aluguel
+        </button>
+      </div>
+      <div class="table-wrap">
+        <div style="overflow-x:auto;">
+          <table>
+            <thead>
+              <tr>
+                <th>Equipamento</th>
+                <th>Cliente</th>
+                <th>Início</th>
+                <th>Fim previsto</th>
+                <th>Devolução</th>
+                <th>Status</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="rentals-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div id="tab-caixa" style="display:none;">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Caixa</div>
+          <div class="page-sub">Entradas e saídas financeiras</div>
+        </div>
+        <button class="btn btn-primary" onclick="openCaixaModal()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Novo lançamento
+        </button>
+      </div>
+      <div class="stats-grid" id="caixa-kpis" style="margin-bottom:24px;"></div>
+      <div class="table-wrap">
+        <div class="table-toolbar">
+          <div class="search-box">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" id="caixa-search" placeholder="Buscar lançamento..." oninput="renderCaixa()">
+          </div>
+          <div class="filter-row">
+            <button class="filter-btn active" data-caixa-filter="todos" onclick="setCaixaFilter('todos')">Todos</button>
+            <button class="filter-btn f-disponivel" data-caixa-filter="entrada" onclick="setCaixaFilter('entrada')">Entradas</button>
+            <button class="filter-btn f-manutencao" data-caixa-filter="saida" onclick="setCaixaFilter('saida')">Saídas</button>
+          </div>
+          <select id="caixa-mes-filter" onchange="renderCaixa()" style="font-size:12px;padding:6px 10px;width:auto;">
+            <option value="">Todos os meses</option>
+            <option value="01">Janeiro</option><option value="02">Fevereiro</option>
+            <option value="03">Março</option><option value="04">Abril</option>
+            <option value="05">Maio</option><option value="06">Junho</option>
+            <option value="07">Julho</option><option value="08">Agosto</option>
+            <option value="09">Setembro</option><option value="10">Outubro</option>
+            <option value="11">Novembro</option><option value="12">Dezembro</option>
+          </select>
+        </div>
+        <div style="overflow-x:auto;">
+          <table>
+            <thead>
+              <tr><th>Data</th><th>Tipo</th><th>Categoria</th><th>Descrição</th><th>Valor</th><th></th></tr>
+            </thead>
+            <tbody id="caixa-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div id="tab-dashboard" style="display:none;">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Dashboard Financeiro</div>
+          <div class="page-sub">Visão geral do negócio</div>
+        </div>
+        <select id="dash-year" onchange="renderDashboard()" style="font-size:12px;padding:6px 10px;width:auto;"></select>
+      </div>
+      <div class="stats-grid" id="dash-kpis" style="margin-bottom:24px;"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+        <div class="table-wrap" style="padding:20px;">
+          <div style="font-size:12px;color:var(--accent);letter-spacing:1px;text-transform:uppercase;margin-bottom:16px;">Receita Mensal (R$)</div>
+          <canvas id="chart-receita" height="200"></canvas>
+        </div>
+        <div class="table-wrap" style="padding:20px;">
+          <div style="font-size:12px;color:var(--accent);letter-spacing:1px;text-transform:uppercase;margin-bottom:16px;">Aluguéis por Mês</div>
+          <canvas id="chart-alugueis" height="200"></canvas>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+        <div class="table-wrap" style="padding:20px;">
+          <div style="font-size:12px;color:var(--accent);letter-spacing:1px;text-transform:uppercase;margin-bottom:16px;">Equipamentos Mais Alugados</div>
+          <canvas id="chart-equips" height="200"></canvas>
+        </div>
+        <div class="table-wrap" style="padding:20px;">
+          <div style="font-size:12px;color:var(--accent);letter-spacing:1px;text-transform:uppercase;margin-bottom:16px;">Status da Frota</div>
+          <canvas id="chart-frota" height="200"></canvas>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <div class="table-toolbar">
+          <span style="font-size:12px;color:var(--accent);letter-spacing:1px;text-transform:uppercase;">Aluguéis em Aberto</span>
+        </div>
+        <div style="overflow-x:auto;">
+          <table>
+            <thead>
+              <tr><th>Cliente</th><th>Equipamentos</th><th>Início</th><th>Devolução prevista</th><th>Valor</th><th>Situação</th></tr>
+            </thead>
+            <tbody id="dash-abertos-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div id="tab-manutencoes" style="display:none;">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Manutenções</div>
+          <div class="page-sub">Registro e histórico de manutenções</div>
+        </div>
+        <button class="btn btn-primary" onclick="openManutModal()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Registrar manutenção
+        </button>
+      </div>
+      <div id="manut-list"></div>
+    </div>
+  </main>
+</div>
+<!-- Modal: Adicionar/Editar Equipamento -->
+<div class="modal-backdrop" id="modal-equip">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="modal-equip-title">Novo equipamento</span>
+      <div class="close-btn" onclick="closeModal('modal-equip')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </div>
+    </div>
+    <div class="form-grid">
+      <div class="form-group span2">
+        <label>Nome do equipamento</label>
+        <input type="text" id="f-nome" placeholder="Ex: Caixa JBL EON615">
+      </div>
+      <div class="form-group">
+        <label>Código / Patrimônio</label>
+        <input type="text" id="f-codigo" placeholder="SOM-001">
+      </div>
+      <div class="form-group">
+        <label>Categoria</label>
+        <select id="f-categoria">
+          <option value="Caixa de som">Caixa de som</option>
+          <option value="Amplificador">Amplificador</option>
+          <option value="Mixer">Mixer</option>
+          <option value="Microfone">Microfone</option>
+          <option value="Cabeamento">Cabeamento</option>
+          <option value="Subwoofer">Subwoofer</option>
+          <option value="Monitor">Monitor</option>
+          <option value="Outro">Outro</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Data de compra</label>
+        <input type="date" id="f-compra">
+      </div>
+      <div class="form-group">
+        <label>Valor de compra (R$)</label>
+        <input type="number" id="f-valor" placeholder="0,00">
+      </div>
+      <div class="form-group">
+        <label>Estado atual</label>
+        <select id="f-estado">
+          <option value="disponivel">Disponível</option>
+          <option value="alugado">Alugado</option>
+          <option value="manutencao">Em manutenção</option>
+          <option value="inativo">Inativo</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Última manutenção</label>
+        <input type="date" id="f-manut">
+      </div>
+      <div class="form-group span2">
+        <label>Observações</label>
+        <textarea id="f-obs" placeholder="Notas sobre o equipamento, serial number, etc."></textarea>
+      </div>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-ghost" onclick="closeModal('modal-equip')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveEquipamento()">Salvar</button>
+    </div>
+    <input type="hidden" id="f-id">
+  </div>
+</div>
+<!-- Modal: Ver detalhes -->
+<div class="modal-backdrop" id="modal-detail">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="detail-title">Detalhes</span>
+      <div class="close-btn" onclick="closeModal('modal-detail')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </div>
+    </div>
+    <div id="detail-content"></div>
+  </div>
+</div>
+<!-- Modal: Registrar aluguel -->
+<div class="modal-backdrop" id="modal-rental">
+  <div class="modal" style="max-width:640px;">
+    <div class="modal-header">
+      <span class="modal-title">Registrar aluguel</span>
+      <div class="close-btn" onclick="closeModal('modal-rental')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </div>
+    </div>
+    <div class="form-grid">
+      <div class="form-group span2">
+        <label>Equipamentos <span id="r-equip-count" style="color:var(--accent);font-size:11px;margin-left:6px;"></span></label>
+        <div id="r-equip-list" style="background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius-sm);max-height:180px;overflow-y:auto;padding:8px 4px;"></div>
+      </div>
+      <div class="form-group span2">
+        <label>Nome do cliente</label>
+        <input type="text" id="r-cliente" placeholder="Nome completo ou empresa">
+      </div>
+      <div class="form-group">
+        <label>Contato / Tel.</label>
+        <input type="text" id="r-contato" placeholder="(13) 99999-9999">
+      </div>
+      <div class="form-group">
+        <label>Valor total do aluguel (R$)</label>
+        <input type="number" id="r-valor" placeholder="0,00">
+      </div>
+      <div class="form-group">
+        <label>Data de início</label>
+        <input type="date" id="r-inicio">
+      </div>
+      <div class="form-group">
+        <label>Data de devolução prevista</label>
+        <input type="date" id="r-fim">
+      </div>
+      <div class="form-group span2">
+        <label>Evento / Local</label>
+        <input type="text" id="r-evento" placeholder="Ex: Casamento — Salão das Flores">
+      </div>
+      <div class="form-group span2">
+        <label>Observações</label>
+        <textarea id="r-obs" placeholder="Condições do contrato, depósito, etc."></textarea>
+      </div>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-ghost" onclick="closeModal('modal-rental')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveRental()">Registrar</button>
+    </div>
+  </div>
+</div>
+<!-- Modal: Registrar manutenção -->
+<div class="modal-backdrop" id="modal-manut">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">Registrar manutenção</span>
+      <div class="close-btn" onclick="closeModal('modal-manut')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </div>
+    </div>
+    <div class="form-grid">
+      <div class="form-group span2">
+        <label>Equipamento</label>
+        <select id="m-equip"></select>
+      </div>
+      <div class="form-group">
+        <label>Data da manutenção</label>
+        <input type="date" id="m-data">
+      </div>
+      <div class="form-group">
+        <label>Custo (R$)</label>
+        <input type="number" id="m-custo" placeholder="0,00">
+      </div>
+      <div class="form-group">
+        <label>Tipo</label>
+        <select id="m-tipo">
+          <option value="Preventiva">Preventiva</option>
+          <option value="Corretiva">Corretiva</option>
+          <option value="Revisão">Revisão</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Responsável</label>
+        <input type="text" id="m-resp" placeholder="Nome do técnico / oficina">
+      </div>
+      <div class="form-group span2">
+        <label>Descrição</label>
+        <textarea id="m-desc" placeholder="O que foi feito, peças trocadas, etc."></textarea>
+      </div>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-ghost" onclick="closeModal('modal-manut')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveManut()">Registrar</button>
+    </div>
+  </div>
+</div>
+<!-- Modal: Lançamento de Caixa -->
+<div class="modal-backdrop" id="modal-caixa">
+  <div class="modal" style="max-width:500px;">
+    <div class="modal-header">
+      <span class="modal-title">Novo lançamento</span>
+      <div class="close-btn" onclick="closeModal('modal-caixa')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </div>
+    </div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Tipo</label>
+        <select id="cx-tipo" onchange="updateCaixaCategorias()">
+          <option value="entrada">Entrada</option>
+          <option value="saida">Saída</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Data</label>
+        <input type="date" id="cx-data">
+      </div>
+      <div class="form-group">
+        <label>Categoria</label>
+        <select id="cx-categoria"></select>
+      </div>
+      <div class="form-group">
+        <label>Valor (R$)</label>
+        <input type="number" id="cx-valor" placeholder="0,00" min="0" step="0.01">
+      </div>
+      <div class="form-group span2">
+        <label>Descrição</label>
+        <input type="text" id="cx-desc" placeholder="Ex: Pagamento aluguel - João Silva">
+      </div>
+      <div class="form-group span2">
+        <label>Observações</label>
+        <textarea id="cx-obs" placeholder="Detalhes adicionais..." style="min-height:60px;"></textarea>
+      </div>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-ghost" onclick="closeModal('modal-caixa')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveCaixa()">Salvar</button>
+    </div>
+  </div>
+</div>
+<script>
+const EQUIP_KEY = 'somtrack_equip';
+const RENTAL_KEY = 'somtrack_rentals';
+const MANUT_KEY = 'somtrack_manut';
+const CAIXA_KEY = 'somtrack_caixa';
+let currentFilter = 'todos';
+let editingId = null;
+let caixaFilter = 'todos';
+
+function load(key) { try { return JSON.parse(localStorage.getItem(key)) || []; } catch { return []; } }
+function save(key, data) { localStorage.setItem(key, JSON.stringify(data)); }
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
+function fmtDate(d) { if (!d) return '—'; const [y,m,day] = d.split('-'); return day+'/'+m+'/'+y; }
+function badgeHtml(estado) {
+  const map = { disponivel:'Disponível', alugado:'Alugado', manutencao:'Manutenção', inativo:'Inativo' };
+  return '<span class="badge badge-'+estado+'">'+(map[estado]||estado)+'</span>';
+}
+
+function showTab(tab) {
+  ['equipamentos','alugueis','manutencoes','dashboard','caixa'].forEach(t => {
+    document.getElementById('tab-'+t).style.display = t===tab ? '' : 'none';
+  });
+  document.querySelectorAll('.nav-item').forEach(el => {
+    el.classList.toggle('active', el.getAttribute('onclick') && el.getAttribute('onclick').includes(tab));
+  });
+  if (tab === 'alugueis') renderRentals();
+  if (tab === 'manutencoes') renderManut();
+  if (tab === 'equipamentos') { renderStats(); renderTable(); }
+  if (tab === 'dashboard') renderDashboard();
+  if (tab === 'caixa') renderCaixa();
+}
+
+function setFilter(f) {
+  currentFilter = f;
+  document.querySelectorAll('.filter-btn[data-filter]').forEach(b => {
+    b.classList.toggle('active', b.dataset.filter === f);
+  });
+  renderTable();
+}
+
+function renderStats() {
+  const equips = load(EQUIP_KEY);
+  const counts = { total: equips.length, disponivel:0, alugado:0, manutencao:0, inativo:0 };
+  equips.forEach(e => { if (counts[e.estado] !== undefined) counts[e.estado]++; });
+  document.getElementById('stats-grid').innerHTML =
+    '<div class="stat-card"><div class="stat-label">Total</div><div class="stat-value accent">'+counts.total+'</div></div>' +
+    '<div class="stat-card"><div class="stat-label">Disponíveis</div><div class="stat-value success">'+counts.disponivel+'</div></div>' +
+    '<div class="stat-card"><div class="stat-label">Alugados</div><div class="stat-value" style="color:var(--info)">'+counts.alugado+'</div></div>' +
+    '<div class="stat-card"><div class="stat-label">Manutenção</div><div class="stat-value warning">'+counts.manutencao+'</div></div>';
+  const hoje = new Date();
+  const prox = equips.filter(e => { if (!e.ultimaManut) return false; const d = new Date(e.ultimaManut); return (hoje - d) / (1000*60*60*24) > 180; });
+  const alertEl = document.getElementById('alert-manut');
+  alertEl.innerHTML = prox.length ? '<div class="alert-strip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>'+prox.length+' equipamento(s) sem manutenção há mais de 6 meses.</div>' : '';
+}
+
+function renderTable() {
+  const equips = load(EQUIP_KEY);
+  const q = document.getElementById('search-input').value.toLowerCase();
+  const filtered = equips.filter(e => {
+    const matchFilter = currentFilter === 'todos' || e.estado === currentFilter;
+    const matchSearch = !q || e.nome.toLowerCase().includes(q) || (e.codigo||'').toLowerCase().includes(q) || e.categoria.toLowerCase().includes(q);
+    return matchFilter && matchSearch;
+  });
+  const rentals = load(RENTAL_KEY);
+  const tbody = document.getElementById('equip-tbody');
+  if (!filtered.length) {
+    tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><p>Nenhum equipamento encontrado.</p></div></td></tr>';
+    return;
+  }
+  tbody.innerHTML = filtered.map(e => {
+    const activeRental = rentals.find(r => r.equipId === e.id && !r.devolvido);
+    return '<tr><td><div class="equip-name">'+e.nome+'</div><div class="equip-code">'+(e.codigo||'')+'</div></td>' +
+      '<td style="color:var(--muted);font-size:12px;">'+e.categoria+'</td>' +
+      '<td>'+badgeHtml(e.estado)+'</td>' +
+      '<td style="font-family:'Share Tech Mono',monospace;font-size:12px;color:var(--muted);">'+fmtDate(e.dataCompra)+'</td>' +
+      '<td style="font-family:'Share Tech Mono',monospace;font-size:12px;color:var(--muted);">'+fmtDate(e.ultimaManut)+'</td>' +
+      '<td style="font-size:12px;">'+(activeRental ? '<span style="color:var(--info);font-weight:500;">'+activeRental.cliente+'</span>' : '<span style="color:var(--muted2)">—</span>')+'</td>' +
+      '<td><div class="actions-col">' +
+        '<button class="btn btn-ghost btn-sm" onclick="openDetail(''+e.id+'')">Ver</button>' +
+        '<button class="btn btn-ghost btn-sm" onclick="openModal('edit',''+e.id+'')">Editar</button>' +
+        '<button class="btn btn-danger btn-sm" onclick="deleteEquip(''+e.id+'')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg></button>' +
+      '</div></td></tr>';
+  }).join('');
+}
+
+function openModal(mode, id) {
+  editingId = id || null;
+  document.getElementById('modal-equip-title').textContent = mode === 'add' ? 'Novo equipamento' : 'Editar equipamento';
+  if (mode === 'edit' && id) {
+    const eq = load(EQUIP_KEY).find(e => e.id === id);
+    if (eq) {
+      document.getElementById('f-nome').value = eq.nome || '';
+      document.getElementById('f-codigo').value = eq.codigo || '';
+      document.getElementById('f-categoria').value = eq.categoria || '';
+      document.getElementById('f-compra').value = eq.dataCompra || '';
+      document.getElementById('f-valor').value = eq.valor || '';
+      document.getElementById('f-estado').value = eq.estado || 'disponivel';
+      document.getElementById('f-manut').value = eq.ultimaManut || '';
+      document.getElementById('f-obs').value = eq.obs || '';
+    }
+  } else {
+    ['f-nome','f-codigo','f-compra','f-valor','f-manut','f-obs'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('f-categoria').value = 'Caixa de som';
+    document.getElementById('f-estado').value = 'disponivel';
+  }
+  document.getElementById('modal-equip').classList.add('open');
+}
+
+function saveEquipamento() {
+  const nome = document.getElementById('f-nome').value.trim();
+  if (!nome) { alert('Informe o nome do equipamento.'); return; }
+  const equips = load(EQUIP_KEY);
+  const novo = {
+    id: editingId || uid(), nome,
+    codigo: document.getElementById('f-codigo').value.trim(),
+    categoria: document.getElementById('f-categoria').value,
+    dataCompra: document.getElementById('f-compra').value,
+    valor: document.getElementById('f-valor').value,
+    estado: document.getElementById('f-estado').value,
+    ultimaManut: document.getElementById('f-manut').value,
+    obs: document.getElementById('f-obs').value.trim(),
+  };
+  if (editingId) { const idx = equips.findIndex(e => e.id === editingId); if (idx > -1) equips[idx] = novo; }
+  else equips.push(novo);
+  save(EQUIP_KEY, equips);
+  closeModal('modal-equip');
+  renderStats(); renderTable();
+}
+
+function deleteEquip(id) {
+  if (!confirm('Remover este equipamento?')) return;
+  save(EQUIP_KEY, load(EQUIP_KEY).filter(e => e.id !== id));
+  renderStats(); renderTable();
+}
+
+function openDetail(id) {
+  const eq = load(EQUIP_KEY).find(e => e.id === id);
+  if (!eq) return;
+  const rentals = load(RENTAL_KEY).filter(r => r.equipId === id);
+  const manuts = load(MANUT_KEY).filter(m => m.equipId === id);
+  let html = '<div class="detail-section"><h3>Informações gerais</h3>' +
+    '<div class="detail-row"><span class="key">Estado</span><span class="val">'+badgeHtml(eq.estado)+'</span></div>' +
+    '<div class="detail-row"><span class="key">Código</span><span class="val mono">'+(eq.codigo||'—')+'</span></div>' +
+    '<div class="detail-row"><span class="key">Categoria</span><span class="val">'+eq.categoria+'</span></div>' +
+    '<div class="detail-row"><span class="key">Data de compra</span><span class="val">'+fmtDate(eq.dataCompra)+'</span></div>' +
+    '<div class="detail-row"><span class="key">Valor de compra</span><span class="val">'+(eq.valor ? 'R$ '+parseFloat(eq.valor).toLocaleString('pt-BR',{minimumFractionDigits:2}) : '—')+'</span></div>' +
+    '<div class="detail-row"><span class="key">Última manutenção</span><span class="val">'+fmtDate(eq.ultimaManut)+'</span></div>' +
+    (eq.obs ? '<div class="detail-row"><span class="key">Obs.</span><span class="val" style="max-width:60%;text-align:right;color:var(--muted)">'+eq.obs+'</span></div>' : '') +
+    '</div><div class="detail-section"><h3>Histórico de aluguéis ('+rentals.length+')</h3>' +
+    (rentals.length ? rentals.slice().reverse().map(r =>
+      '<div class="history-item"><div class="h-top"><span class="h-client">'+r.cliente+'</span><span class="h-date">'+fmtDate(r.inicio)+' → '+fmtDate(r.fim)+'</span></div>' +
+      '<div style="font-size:11px;color:var(--muted)">'+(r.evento||'')+' '+(r.contato ? '· '+r.contato : '')+'</div>' +
+      (r.devolvido ? '<span style="font-size:11px;color:var(--success)">Devolvido em '+fmtDate(r.devolucao)+'</span>' : '<span style="font-size:11px;color:var(--info)">Em andamento</span>') +
+      '</div>').join('') : '<p style="color:var(--muted);font-size:13px;">Nenhum aluguel registrado.</p>') +
+    '</div><div class="detail-section"><h3>Histórico de manutenções ('+manuts.length+')</h3>' +
+    (manuts.length ? manuts.slice().reverse().map(m =>
+      '<div class="history-item"><div class="h-top"><span class="h-client">'+m.tipo+' — '+(m.resp||'—')+'</span><span class="h-date">'+fmtDate(m.data)+'</span></div>' +
+      '<div style="font-size:11px;color:var(--muted)">'+(m.desc||'')+'</div>' +
+      (m.custo ? '<span style="font-size:11px;color:var(--warning)">R$ '+parseFloat(m.custo).toLocaleString('pt-BR',{minimumFractionDigits:2})+'</span>' : '') +
+      '</div>').join('') : '<p style="color:var(--muted);font-size:13px;">Nenhuma manutenção registrada.</p>') + '</div>';
+  document.getElementById('detail-title').textContent = eq.nome;
+  document.getElementById('detail-content').innerHTML = html;
+  document.getElementById('modal-detail').classList.add('open');
+}
+
+function openRentalModal() {
+  const equips = load(EQUIP_KEY).filter(e => e.estado === 'disponivel');
+  const list = document.getElementById('r-equip-list');
+  list.innerHTML = equips.length ? equips.map(e =>
+    '<label class="equip-check-item"><input type="checkbox" value="'+e.id+'" onchange="updateEquipCount()"><span class="eci-name">'+e.nome+'</span><span class="eci-code">'+(e.codigo||e.id.slice(0,6))+'</span></label>'
+  ).join('') : '<p style="color:var(--muted);font-size:13px;padding:8px 10px;">Nenhum equipamento disponível.</p>';
+  document.getElementById('r-equip-count').textContent = '';
+  ['r-cliente','r-contato','r-valor','r-inicio','r-fim','r-evento','r-obs'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+  document.getElementById('modal-rental').classList.add('open');
+}
+
+function updateEquipCount() {
+  const checked = document.querySelectorAll('#r-equip-list input[type=checkbox]:checked').length;
+  document.getElementById('r-equip-count').textContent = checked ? checked+' selecionado(s)' : '';
+}
+
+function getSelectedEquipIds() {
+  return [...document.querySelectorAll('#r-equip-list input[type=checkbox]:checked')].map(c => c.value);
+}
+
+function saveRental() {
+  const cliente = document.getElementById('r-cliente').value.trim();
+  const equipIds = getSelectedEquipIds();
+  if (!cliente) { alert('Preencha o nome do cliente.'); return; }
+  if (!equipIds.length) { alert('Selecione pelo menos um equipamento.'); return; }
+  const rentals = load(RENTAL_KEY);
+  const groupId = uid();
+  const common = { cliente, contato: document.getElementById('r-contato').value, valor: document.getElementById('r-valor').value,
+    inicio: document.getElementById('r-inicio').value, fim: document.getElementById('r-fim').value,
+    evento: document.getElementById('r-evento').value, obs: document.getElementById('r-obs').value,
+    devolvido: false, devolucao: null, groupId };
+  equipIds.forEach(equipId => { rentals.push({ id: uid(), equipId, ...common }); });
+  save(RENTAL_KEY, rentals);
+  const equips = load(EQUIP_KEY);
+  equipIds.forEach(equipId => { const idx = equips.findIndex(e => e.id === equipId); if (idx > -1) equips[idx].estado = 'alugado'; });
+  save(EQUIP_KEY, equips);
+  closeModal('modal-rental');
+  renderStats(); renderTable();
+}
+
+function renderRentals() {
+  const rentals = load(RENTAL_KEY);
+  const equips = load(EQUIP_KEY);
+  const tbody = document.getElementById('rentals-tbody');
+  if (!rentals.length) { tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><p>Nenhum aluguel registrado ainda.</p></div></td></tr>'; return; }
+  const groups = {};
+  rentals.slice().reverse().forEach(r => {
+    const key = r.groupId || r.id;
+    if (!groups[key]) groups[key] = { key, records: [], cliente: r.cliente, inicio: r.inicio, fim: r.fim, valor: r.valor };
+    groups[key].records.push(r);
+    if (!r.devolvido) groups[key].devolvido = false;
+  });
+  tbody.innerHTML = Object.values(groups).map(g => {
+    const allDone = g.records.every(r => r.devolvido);
+    const equipNames = g.records.map(r => { const eq = equips.find(e => e.id === r.equipId); return '<div style="font-size:12px;">'+(eq ? eq.nome : '<span style="color:var(--muted2)">Removido</span>')+'</div>'; }).join('');
+    return '<tr><td>'+equipNames+'<div style="font-size:11px;color:var(--muted);margin-top:3px;">'+g.records.length+' equipamento(s)</div></td>' +
+      '<td style="font-weight:500">'+g.cliente+'</td>' +
+      '<td class="mono" style="font-size:12px;color:var(--muted)">'+fmtDate(g.inicio)+'</td>' +
+      '<td class="mono" style="font-size:12px;color:var(--muted)">'+fmtDate(g.fim)+'</td>' +
+      '<td class="mono" style="font-size:12px;">'+(allDone ? '<span style="color:var(--success)">'+fmtDate(g.records[g.records.length-1].devolucao)+'</span>' : '<span style="color:var(--muted2)">—</span>')+'</td>' +
+      '<td>'+(allDone ? '<span class="badge badge-disponivel">Devolvido</span>' : '<span class="badge badge-alugado">Em andamento</span>')+'</td>' +
+      '<td>'+(!allDone ? '<button class="btn btn-ghost btn-sm" onclick="devolverGrupo(''+g.key+'')">Devolver tudo</button>' : '')+'</td></tr>';
+  }).join('');
+}
+
+function devolverGrupo(groupKey) {
+  const hoje = new Date().toISOString().split('T')[0];
+  const rentals = load(RENTAL_KEY);
+  const equips = load(EQUIP_KEY);
+  rentals.forEach((r, idx) => {
+    if ((r.groupId || r.id) === groupKey && !r.devolvido) {
+      rentals[idx].devolvido = true; rentals[idx].devolucao = hoje;
+      const ei = equips.findIndex(e => e.id === r.equipId);
+      if (ei > -1) equips[ei].estado = 'disponivel';
+    }
+  });
+  save(RENTAL_KEY, rentals); save(EQUIP_KEY, equips);
+  renderRentals(); renderStats(); renderTable();
+}
+
+function openManutModal() {
+  const equips = load(EQUIP_KEY);
+  document.getElementById('m-equip').innerHTML = equips.map(e => '<option value="'+e.id+'">'+e.nome+'</option>').join('');
+  ['m-data','m-custo','m-resp','m-desc'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+  document.getElementById('m-tipo').value = 'Preventiva';
+  document.getElementById('modal-manut').classList.add('open');
+}
+
+function saveManut() {
+  const equipId = document.getElementById('m-equip').value;
+  const data = document.getElementById('m-data').value;
+  if (!equipId || !data) { alert('Selecione o equipamento e a data.'); return; }
+  const manuts = load(MANUT_KEY);
+  manuts.push({ id: uid(), equipId, data, tipo: document.getElementById('m-tipo').value, custo: document.getElementById('m-custo').value, resp: document.getElementById('m-resp').value, desc: document.getElementById('m-desc').value });
+  save(MANUT_KEY, manuts);
+  const equips = load(EQUIP_KEY);
+  const idx = equips.findIndex(e => e.id === equipId);
+  if (idx > -1) { equips[idx].ultimaManut = data; save(EQUIP_KEY, equips); }
+  closeModal('modal-manut'); renderManut();
+}
+
+function renderManut() {
+  const manuts = load(MANUT_KEY);
+  const equips = load(EQUIP_KEY);
+  const el = document.getElementById('manut-list');
+  if (!manuts.length) { el.innerHTML = '<div class="empty-state"><p>Nenhuma manutenção registrada ainda.</p></div>'; return; }
+  el.innerHTML = manuts.slice().reverse().map(m => {
+    const eq = equips.find(e => e.id === m.equipId);
+    return '<div class="manut-card"><div class="manut-info"><h4>'+(eq ? eq.nome : 'Equipamento removido')+'</h4>' +
+      '<p>'+m.tipo+' · '+(m.resp||'Responsável não informado')+'</p>' +
+      (m.desc ? '<p style="margin-top:4px;color:var(--muted2)">'+m.desc+'</p>' : '') +
+      (m.custo ? '<p style="margin-top:4px;color:var(--warning);font-size:12px;">R$ '+parseFloat(m.custo).toLocaleString('pt-BR',{minimumFractionDigits:2})+'</p>' : '') +
+      '</div><div class="manut-date">'+fmtDate(m.data)+'</div></div>';
+  }).join('');
+}
+
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-backdrop').forEach(bd => { bd.addEventListener('click', e => { if (e.target === bd) bd.classList.remove('open'); }); });
+
+const CATS_ENTRADA = ['Aluguel recebido','Adiantamento','Depósito caução','Sinal de evento','Outros'];
+const CATS_SAIDA = ['Combustível','Frete / Transporte','Alimentação','Manutenção de equipamento','Taxa de evento','Salário / Pagamento','Material / Insumos','Aluguel de espaço','Outros'];
+
+function updateCaixaCategorias() {
+  const tipo = document.getElementById('cx-tipo').value;
+  const cats = tipo === 'entrada' ? CATS_ENTRADA : CATS_SAIDA;
+  document.getElementById('cx-categoria').innerHTML = cats.map(c => '<option>'+c+'</option>').join('');
+}
+
+function openCaixaModal() {
+  document.getElementById('cx-data').value = new Date().toISOString().split('T')[0];
+  document.getElementById('cx-valor').value = '';
+  document.getElementById('cx-desc').value = '';
+  document.getElementById('cx-obs').value = '';
+  document.getElementById('cx-tipo').value = 'entrada';
+  updateCaixaCategorias();
+  document.getElementById('modal-caixa').classList.add('open');
+}
+
+function saveCaixa() {
+  const valor = parseFloat(document.getElementById('cx-valor').value);
+  const data = document.getElementById('cx-data').value;
+  const desc = document.getElementById('cx-desc').value.trim();
+  if (!valor || valor <= 0 || !data || !desc) { alert('Preencha data, descrição e valor.'); return; }
+  const lista = load(CAIXA_KEY);
+  lista.push({ id: uid(), tipo: document.getElementById('cx-tipo').value, data, categoria: document.getElementById('cx-categoria').value, desc, valor, obs: document.getElementById('cx-obs').value.trim() });
+  save(CAIXA_KEY, lista);
+  closeModal('modal-caixa'); renderCaixa();
+}
+
+function setCaixaFilter(f) {
+  caixaFilter = f;
+  document.querySelectorAll('[data-caixa-filter]').forEach(b => b.classList.toggle('active', b.dataset.caixaFilter === f));
+  renderCaixa();
+}
+
+function deleteCaixa(id) {
+  if (!confirm('Remover este lançamento?')) return;
+  save(CAIXA_KEY, load(CAIXA_KEY).filter(l => l.id !== id));
+  renderCaixa();
+}
+
+function renderCaixa() {
+  let lista = load(CAIXA_KEY);
+  const q = (document.getElementById('caixa-search')||{value:''}).value.toLowerCase();
+  const mes = (document.getElementById('caixa-mes-filter')||{value:''}).value;
+  const totalEntradas = lista.filter(l => l.tipo==='entrada').reduce((s,l) => s+(parseFloat(l.valor)||0), 0);
+  const totalSaidas = lista.filter(l => l.tipo==='saida').reduce((s,l) => s+(parseFloat(l.valor)||0), 0);
+  const saldo = totalEntradas - totalSaidas;
+  const sc = saldo >= 0 ? 'var(--accent)' : 'var(--danger)';
+  document.getElementById('caixa-kpis').innerHTML =
+    '<div class="stat-card" style="border-color:rgba(0,240,176,0.3)"><div class="stat-label">Total Entradas</div><div class="stat-value success" style="font-size:20px;">R$ '+totalEntradas.toLocaleString('pt-BR',{minimumFractionDigits:2})+'</div></div>' +
+    '<div class="stat-card" style="border-color:rgba(255,51,85,0.3)"><div class="stat-label">Total Saídas</div><div class="stat-value danger" style="font-size:20px;">R$ '+totalSaidas.toLocaleString('pt-BR',{minimumFractionDigits:2})+'</div></div>' +
+    '<div class="stat-card"><div class="stat-label">Saldo Geral</div><div class="stat-value" style="font-size:20px;color:'+sc+'">R$ '+saldo.toLocaleString('pt-BR',{minimumFractionDigits:2})+'</div></div>' +
+    '<div class="stat-card"><div class="stat-label">Lançamentos</div><div class="stat-value accent">'+lista.length+'</div></div>';
+  if (caixaFilter !== 'todos') lista = lista.filter(l => l.tipo === caixaFilter);
+  if (mes) lista = lista.filter(l => l.data && l.data.slice(5,7) === mes);
+  if (q) lista = lista.filter(l => l.desc.toLowerCase().includes(q) || l.categoria.toLowerCase().includes(q));
+  const tbody = document.getElementById('caixa-tbody');
+  if (!lista.length) { tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><p>Nenhum lançamento encontrado.</p></div></td></tr>'; return; }
+  tbody.innerHTML = lista.slice().sort((a,b) => b.data.localeCompare(a.data)).map(l => {
+    const ent = l.tipo === 'entrada';
+    const bs = ent ? 'background:rgba(0,240,176,0.1);color:var(--success);border:1px solid rgba(0,240,176,0.3)' : 'background:rgba(255,51,85,0.1);color:var(--danger);border:1px solid rgba(255,51,85,0.3)';
+    return '<tr><td class="mono" style="font-size:12px;color:var(--muted)">'+fmtDate(l.data)+'</td>' +
+      '<td><span class="badge" style="'+bs+'">'+(ent ? '↑ Entrada' : '↓ Saída')+'</span></td>' +
+      '<td style="font-size:12px;color:var(--muted)">'+l.categoria+'</td>' +
+      '<td style="font-weight:500">'+l.desc+(l.obs ? '<div style="font-size:11px;color:var(--muted2);margin-top:2px;">'+l.obs+'</div>' : '')+'</td>' +
+      '<td class="mono" style="font-size:13px;font-weight:600;color:'+(ent?'var(--success)':'var(--danger)')+';">'+(ent?'+':'-')+' R$ '+parseFloat(l.valor).toLocaleString('pt-BR',{minimumFractionDigits:2})+'</td>' +
+      '<td><button class="btn btn-danger btn-sm" onclick="deleteCaixa(''+l.id+'')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg></button></td></tr>';
+  }).join('');
+}
+
+renderStats(); renderTable();
+</script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+let chartReceita=null, chartAlugueis=null, chartEquips=null, chartFrota=null;
+const MONTHS=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+const NEON1='#ff2dff', NEON2='#00f0ff', NEON3='#ffaa00', NEON4='#00f0b0', NEON5='#ff3355';
+
+function destroyChart(c) { if(c){try{c.destroy();}catch(e){}} }
+
+function renderDashboard() {
+  const rentals = load(RENTAL_KEY);
+  const equips = load(EQUIP_KEY);
+  const manuts = load(MANUT_KEY);
+  const yearSel = document.getElementById('dash-year');
+  const allYears = [...new Set(rentals.map(r => r.inicio ? r.inicio.slice(0,4) : null).filter(Boolean))];
+  const thisYear = new Date().getFullYear().toString();
+  if (!allYears.includes(thisYear)) allYears.push(thisYear);
+  allYears.sort().reverse();
+  const currentVal = yearSel.value || thisYear;
+  yearSel.innerHTML = allYears.map(y => '<option value="'+y+'"'+(y===currentVal?' selected':'')+'>'+y+'</option>').join('');
+  const year = yearSel.value || thisYear;
+  const yearRentals = rentals.filter(r => r.inicio && r.inicio.startsWith(year));
+  const totalReceita = yearRentals.reduce((s,r) => s+(parseFloat(r.valor)||0), 0);
+  const totalAlugueis = yearRentals.length;
+  const ticketMedio = totalAlugueis ? totalReceita/totalAlugueis : 0;
+  const emAberto = rentals.filter(r => !r.devolvido).length;
+  const hoje = new Date(); hoje.setHours(0,0,0,0);
+  const vencidos = rentals.filter(r => !r.devolvido && r.fim && new Date(r.fim) < hoje).length;
+  const custoManut = manuts.filter(m => m.data && m.data.startsWith(year)).reduce((s,m) => s+(parseFloat(m.custo)||0), 0);
+  const caixaAll = load(CAIXA_KEY);
+  const caixaEntradas = caixaAll.filter(l=>l.tipo==='entrada'&&l.data&&l.data.startsWith(year)).reduce((s,l)=>s+(parseFloat(l.valor)||0),0);
+  const caixaSaidas = caixaAll.filter(l=>l.tipo==='saida'&&l.data&&l.data.startsWith(year)).reduce((s,l)=>s+(parseFloat(l.valor)||0),0);
+  const caixaSaldo = caixaEntradas - caixaSaidas;
+  document.getElementById('dash-kpis').innerHTML =
+    '<div class="stat-card"><div class="stat-label">Receita '+year+'</div><div class="stat-value" style="font-size:20px;color:var(--accent)">R$ '+totalReceita.toLocaleString('pt-BR',{minimumFractionDigits:2})+'</div></div>' +
+    '<div class="stat-card"><div class="stat-label">Aluguéis '+year+'</div><div class="stat-value accent">'+totalAlugueis+'</div></div>' +
+    '<div class="stat-card"><div class="stat-label">Ticket Médio</div><div class="stat-value" style="font-size:20px;color:var(--accent2)">R$ '+ticketMedio.toLocaleString('pt-BR',{minimumFractionDigits:2})+'</div></div>' +
+    '<div class="stat-card"><div class="stat-label">Em Aberto</div><div class="stat-value" style="color:var(--info)">'+emAberto+'</div></div>' +
+    '<div class="stat-card"><div class="stat-label">Vencidos</div><div class="stat-value danger">'+vencidos+'</div></div>' +
+    '<div class="stat-card"><div class="stat-label">Custo Manut. '+year+'</div><div class="stat-value warning" style="font-size:18px;">R$ '+custoManut.toLocaleString('pt-BR',{minimumFractionDigits:2})+'</div></div>' +
+    '<div class="stat-card" style="border-color:rgba(0,240,176,0.25)"><div class="stat-label">Entradas Caixa '+year+'</div><div class="stat-value success" style="font-size:18px;">R$ '+caixaEntradas.toLocaleString('pt-BR',{minimumFractionDigits:2})+'</div></div>' +
+    '<div class="stat-card" style="border-color:rgba(255,51,85,0.25)"><div class="stat-label">Saídas Caixa '+year+'</div><div class="stat-value danger" style="font-size:18px;">R$ '+caixaSaidas.toLocaleString('pt-BR',{minimumFractionDigits:2})+'</div></div>' +
+    '<div class="stat-card"><div class="stat-label">Saldo Caixa '+year+'</div><div class="stat-value" style="font-size:18px;color:'+(caixaSaldo>=0?'var(--accent)':'var(--danger)')+'">R$ '+caixaSaldo.toLocaleString('pt-BR',{minimumFractionDigits:2})+'</div></div>';
+  const receitaMes = Array(12).fill(0);
+  yearRentals.forEach(r => { const m=parseInt((r.inicio||'').slice(5,7))-1; if(m>=0) receitaMes[m]+=parseFloat(r.valor)||0; });
+  destroyChart(chartReceita);
+  chartReceita = new Chart(document.getElementById('chart-receita'), {
+    type:'bar', data:{ labels:MONTHS, datasets:[{ label:'Receita (R$)', data:receitaMes, backgroundColor:'rgba(255,45,255,0.25)', borderColor:NEON1, borderWidth:2, borderRadius:4 }] },
+    options:{ plugins:{legend:{display:false}}, scales:{ x:{ticks:{color:'#7070a0',font:{size:10}},grid:{color:'#1e1e30'}}, y:{ticks:{color:'#7070a0',font:{size:10},callback:v=>'R$'+v.toLocaleString('pt-BR')},grid:{color:'#1e1e30'}} } }
+  });
+  const qtdMes = Array(12).fill(0);
+  yearRentals.forEach(r => { const m=parseInt((r.inicio||'').slice(5,7))-1; if(m>=0) qtdMes[m]++; });
+  destroyChart(chartAlugueis);
+  chartAlugueis = new Chart(document.getElementById('chart-alugueis'), {
+    type:'line', data:{ labels:MONTHS, datasets:[{ label:'Aluguéis', data:qtdMes, borderColor:NEON2, backgroundColor:'rgba(0,240,255,0.08)', borderWidth:2, pointBackgroundColor:NEON2, pointRadius:4, tension:0.35, fill:true }] },
+    options:{ plugins:{legend:{display:false}}, scales:{ x:{ticks:{color:'#7070a0',font:{size:10}},grid:{color:'#1e1e30'}}, y:{ticks:{color:'#7070a0',font:{size:10}},grid:{color:'#1e1e30'},beginAtZero:true} } }
+  });
+  const equipCount = {};
+  yearRentals.forEach(r => { const eq=equips.find(e=>e.id===r.equipId); const nome=eq?eq.nome:'Removido'; equipCount[nome]=(equipCount[nome]||0)+1; });
+  const topEquips = Object.entries(equipCount).sort((a,b)=>b[1]-a[1]).slice(0,6);
+  destroyChart(chartEquips);
+  chartEquips = new Chart(document.getElementById('chart-equips'), {
+    type:'bar', data:{ labels:topEquips.map(e=>e[0].length>18?e[0].slice(0,18)+'…':e[0]), datasets:[{ label:'Aluguéis', data:topEquips.map(e=>e[1]), backgroundColor:[NEON1,NEON2,NEON3,NEON4,NEON5,'#a855f7'].map(c=>c+'55'), borderColor:[NEON1,NEON2,NEON3,NEON4,NEON5,'#a855f7'], borderWidth:2, borderRadius:4 }] },
+    options:{ indexAxis:'y', plugins:{legend:{display:false}}, scales:{ x:{ticks:{color:'#7070a0',font:{size:10}},grid:{color:'#1e1e30'},beginAtZero:true}, y:{ticks:{color:'#f0f0ff',font:{size:10}},grid:{color:'#1e1e30'}} } }
+  });
+  const counts = {disponivel:0,alugado:0,manutencao:0,inativo:0};
+  equips.forEach(e=>{if(counts[e.estado]!==undefined)counts[e.estado]++;});
+  destroyChart(chartFrota);
+  chartFrota = new Chart(document.getElementById('chart-frota'), {
+    type:'doughnut', data:{ labels:['Disponível','Alugado','Manutenção','Inativo'], datasets:[{ data:[counts.disponivel,counts.alugado,counts.manutencao,counts.inativo], backgroundColor:['rgba(0,240,176,0.7)','rgba(0,240,255,0.7)','rgba(255,170,0,0.7)','rgba(136,136,136,0.4)'], borderColor:[NEON4,NEON2,NEON3,'#555'], borderWidth:2, hoverOffset:8 }] },
+    options:{ cutout:'60%', plugins:{legend:{position:'bottom',labels:{color:'#f0f0ff',font:{size:11},padding:12}}} }
+  });
+  const abertos = rentals.filter(r => !r.devolvido);
+  const groups = {};
+  abertos.forEach(r => { const key=r.groupId||r.id; if(!groups[key]) groups[key]={cliente:r.cliente,inicio:r.inicio,fim:r.fim,valor:r.valor,equips:[]}; const eq=equips.find(e=>e.id===r.equipId); if(eq) groups[key].equips.push(eq.nome); });
+  const tbody = document.getElementById('dash-abertos-tbody');
+  if (!Object.keys(groups).length) { tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><p>Nenhum aluguel em aberto.</p></div></td></tr>'; }
+  else {
+    tbody.innerHTML = Object.values(groups).map(g => {
+      const fimDate = g.fim ? new Date(g.fim) : null;
+      const atrasado = fimDate && fimDate < hoje;
+      const diasAtraso = atrasado ? Math.floor((hoje-fimDate)/(1000*60*60*24)) : 0;
+      const sit = atrasado ? '<span style="color:var(--danger);font-weight:500;">⚠ '+diasAtraso+'d atrasado</span>' : '<span style="color:var(--success);">Em dia</span>';
+      return '<tr><td style="font-weight:500">'+g.cliente+'</td><td style="font-size:12px;color:var(--muted)">'+(g.equips.join(', ')||'—')+'</td>' +
+        '<td class="mono" style="font-size:12px;color:var(--muted)">'+fmtDate(g.inicio)+'</td>' +
+        '<td class="mono" style="font-size:12px;'+(atrasado?'color:var(--danger)':'')+'">'+fmtDate(g.fim)+'</td>' +
+        '<td class="mono" style="font-size:12px;">'+(g.valor ? 'R$ '+parseFloat(g.valor).toLocaleString('pt-BR',{minimumFractionDigits:2}) : '—')+'</td>' +
+        '<td>'+sit+'</td></tr>';
+    }).join('');
+  }
+}
+</script>
+</body>
+</html>
