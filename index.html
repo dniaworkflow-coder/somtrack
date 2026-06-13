@@ -553,6 +553,66 @@
     </div>
   </div>
 </div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script>
+const SUPABASE_URL = 'https://qiiorwflegnnylenunbl.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_zRVKGlIBtDj6tb8Fmf0AoQ_jhribivq';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+const TABLE_MAP = {
+  somtrack_equip: 'equipamentos',
+  somtrack_rentals: 'rentals',
+  somtrack_manut: 'manutencoes',
+  somtrack_caixa: 'caixa'
+};
+const FIELD_MAP = {
+  manutencoes: { desc: 'descricao' },
+  caixa: { desc: 'descricao' }
+};
+
+const _cache = {};
+
+async function syncFromDB() {
+  for (const [key, table] of Object.entries(TABLE_MAP)) {
+    const { data, error } = await sb.from(table).select('*');
+    if (!error) {
+      _cache[key] = (data || []).map(row => {
+        const fmap = FIELD_MAP[table] || {};
+        const out = { ...row };
+        for (const [from, to] of Object.entries(fmap)) { if (out[to] !== undefined) { out[from] = out[to]; delete out[to]; } }
+        return out;
+      });
+    }
+  }
+}
+
+function load(key) { return _cache[key] || []; }
+
+async function save(key, dataArr) {
+  _cache[key] = dataArr;
+  const table = TABLE_MAP[key];
+  if (!table) return;
+  const fmap = FIELD_MAP[table] || {};
+  const rows = dataArr.map(row => {
+    const out = { ...row };
+    for (const [from, to] of Object.entries(fmap)) { if (out[from] !== undefined) { out[to] = out[from]; delete out[from]; } }
+    return out;
+  });
+  await sb.from(table).delete().neq('id', '___never___');
+  if (rows.length > 0) await sb.from(table).insert(rows);
+}
+
+document.addEventListener('DOMContentLoaded', async () => {
+  const overlay = document.createElement('div');
+  overlay.id = 'loading-overlay';
+  overlay.style.cssText = 'position:fixed;inset:0;background:#050508;z-index:99999;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px;';
+  overlay.innerHTML = '<p style="font-family:Orbitron,monospace;color:#ff2dff;font-size:14px;letter-spacing:2px;">CARREGANDO DADOS...</p>';
+  document.body.prepend(overlay);
+  await syncFromDB();
+  overlay.remove();
+  renderStats(); renderTable();
+});
+</script>
 <script>
 const EQUIP_KEY = 'somtrack_equip';
 const RENTAL_KEY = 'somtrack_rentals';
@@ -562,8 +622,7 @@ let currentFilter = 'todos';
 let editingId = null;
 let caixaFilter = 'todos';
 
-function load(key) { try { return JSON.parse(localStorage.getItem(key)) || []; } catch { return []; } }
-function save(key, data) { localStorage.setItem(key, JSON.stringify(data)); }
+// Storage handled by Supabase (see script above)
 function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
 function fmtDate(d) { if (!d) return '—'; const [y,m,day] = d.split('-'); return day+'/'+m+'/'+y; }
 function badgeHtml(estado) {
@@ -909,7 +968,7 @@ function renderCaixa() {
   }).join('');
 }
 
-renderStats(); renderTable();
+// Initial render called after Supabase sync (see DOMContentLoaded above)
 </script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
